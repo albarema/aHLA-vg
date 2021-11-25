@@ -5,8 +5,9 @@ configfile: "config.yaml"
 
 CHROMS = 6
 # choose prune options
-PRUNEOP=config['prune_version']
-OPTS=config['prune_options'][PRUNEOP]
+#PRUNEOP=config['prune_version']
+#OPTS=config['prune_options'][PRUNEOP]
+
 # choose vcf 
 VCFV='pangenomes'
 VCFPATH=config['vcf'][VCFV]['minMAF']
@@ -21,7 +22,7 @@ wildcard_constraints:
 rule all:
     input:
         #expand("vg/graphs/{dat}/{genome}-{vcf}-{chrom}.gcsa", chrom=6, dat='pangenomes', genome=REFV, vcf=VCFV),
-        expand("vg/graphs/{dat}/{genome}-{vcf}-{chrom}.snarls", chrom=6, dat='pangenomes', genome=REFV, vcf=VCFV)
+        expand("vg/graphs/{dat}/{genome}-{vcf}-{chrom}.dist", chrom=6, dat='pangenomes', genome=REFV, vcf=VCFV)
         # expand("vg/graphs/{dat}/{genome}-{vcf}-{chrom}.gcsa", chrom=6, dat='1kGP', genome=REFV, vcf=VCFV),
 
 
@@ -137,7 +138,7 @@ rule prune_vg:
 
 rule gbwt_greedy:
     input:
-        vcf=config['vcf'][VCFV]['allminMAF'],
+        vcf=config['vcf'][VCFV]['minMAF'],
         xg="vg/graphs/{dat}/{genome}-{vcf}-{chrom}.xg"
     output:
         gbwt="vg/graphs/{dat}/{genome}-{vcf}-{chrom}-N{n}.gbwt",
