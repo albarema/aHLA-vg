@@ -5,8 +5,8 @@ configfile: "config.yaml"
 
 CHROMS = 6
 # choose prune options
-#PRUNEOP=config['prune_version']
-#OPTS=config['prune_options'][PRUNEOP]
+PRUNEOP=config['prune_version']
+OPTS=config['prune_options'][PRUNEOP]
 
 # choose vcf 
 VCFV='pangenomes'
