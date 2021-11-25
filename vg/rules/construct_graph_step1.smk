@@ -1,9 +1,10 @@
 ##### step 1 #####
 configfile: "config.yaml"
+
 CHROMS = list(range(1, 23)) # + ['X']
 # choose prune options - NOT WORKING - tab paste as well with the options 
-PRUNEOP=config['prune_version']
-OPTS=config['prune_options'][PRUNEOP]
+#PRUNEOP=config['prune_version']
+#OPTS=config['prune_options'][PRUNEOP]
 # choose vcf 
 VCFV=config['vcf_version']
 VCFPATH=config['vcf'][VCFV]['allminMAF']
@@ -33,9 +34,10 @@ rule construct_chr:
     threads: 4
     shell:
         "vg construct "
-        "-r {input.ref} "
-        "-v {input.vcf} "
-        "-C -R chr{wildcards.chrom} "
+        "--reference {input.ref} "
+        "--vcf {input.vcf} "
+        "--region-is-chrom "
+        "--region chr{wildcards.chrom} "
         "--node-max 32 "
         "--alt-paths "
         "--handle-sv "
@@ -77,7 +79,11 @@ rule index_xg:
     benchmark:
         "vg/benchmarks/{dat}/{genome}-{vcf}.xg.log"
     shell:
-        "vg index --temp-dir vg/tmp -x {output} -L {input.vg} --progress 2> {log}"
+        "vg index "
+        "--temp-dir vg/tmp "
+        "--xg-name {output} "
+        "--xg-alts {input.vg} "
+        "--progress 2> {log}"
 
 rule index_snarls:
     """
@@ -89,7 +95,9 @@ rule index_snarls:
     benchmark: 'vg/benchmarks/{dat}/{genome}-{vcf}.snarls.benchmark.log'
     log: 'vg/logs/{dat}/{genome}-{vcf}.snarls.log'
     shell:
-        "vg snarls -t {threads} {input} > {output} 2> {log}"
+        "vg snarls "
+        "--threads {threads} "
+        "{input} > {output} 2> {log}"
 
 rule gbwt_haplo:
     input:
@@ -102,7 +110,12 @@ rule gbwt_haplo:
     benchmark:
         "vg/benchmarks/{dat}/{genome}-{vcf}-gbwt.log"
     shell:
-        "vg gbwt -d vg/tmp -x {input.xg} -o {output.gbwt} -v {input.vcf} --progress 2> {log} "
+        "vg gbwt "
+        "--temp-dir vg/tmp "
+        "--xg-name {input.xg} "
+        "--output {output.gbwt} "
+        "--vcf-input {input.vcf} "
+        "--progress 2> {log} "
 
 rule prune_vg:
     """
@@ -121,7 +134,11 @@ rule prune_vg:
     params:
         opt=OPTS #not used cause it was not working
     shell:
-        "vg prune -t {threads} -M 32 --restore-paths {input.vg} --progress 1> {output} 2> {log}"
+        "vg prune "
+        "--threads {threads} "
+        "--max-degree 32 "
+        "--restore-paths {input.vg} "
+        "--progress 1> {output} 2> {log}"
 
 rule gbwt_greedy:
     input:
@@ -138,7 +155,14 @@ rule gbwt_greedy:
     benchmark:
         "vg/benchmarks/{dat}/{genome}-{vcf}-gbwt-N{n}.log"
     shell:
-        "vg gbwt -n {wildcards.n} -d vg/tmp -x {input.xg} -g {output.gg} -o {output.gbwt} -P --progress 2> {log} "
+        "vg gbwt "
+        "--num-paths {wildcards.n} "
+        "--temp-dir vg/tmp "
+        "--xg-name {input.xg} "
+        "--graph-name {output.gg} "
+        "--output {output.gbwt} "
+        "--path-cover "
+        "--progress 2> {log} "
 
 
 rule index_gcsa:
@@ -160,9 +184,10 @@ rule index_gcsa:
     shell: 
         "vg index "
         "--temp-dir vg/tmp "
-        "-g {output.gcsa} "
-        "-t {threads} "
-        "{input.vg} --progress 2> {log}"
+        "--gcsa-out {output.gcsa} "
+        "--threads {threads} "
+        "{input.vg} "
+        "--progress 2> {log}"
 
 rule index_minimizer:
     input:
@@ -175,7 +200,13 @@ rule index_minimizer:
     benchmark: 'vg/benchmarks/{dat}/{genome}-{vcf}-minimizer-k{k}-w{w}-N{n}.benchmark.txt'
     log: 'vg/logs/{dat}/{genome}-{vcf}-minimizer-k{k}-w{w}-N{n}.log.txt'
     shell:
-        "vg minimizer -k {wildcards.k} -w {wildcards.w} -t {threads} -i {output} -g {input.gbwt} {input.xg} 2> {log}"
+        "vg minimizer "
+        "--kmer-length {wildcards.k} "
+        "--window-length {wildcards.w} "
+        "--threads {threads} "
+        "--output-name {output} "
+        "--gbwt-name {input.gbwt} "
+        "{input.xg} 2> {log}"
 
 rule index_trivial_snarls:
     input: 'vg/graphs/{dat}/{genome}-{vcf}.xg'
@@ -186,7 +217,11 @@ rule index_trivial_snarls:
     benchmark: 'vg/benchmarks/{dat}/{genome}-{vcf}-trivialsnarls.benchmark.txt'
     log: 'vg/logs/{dat}/{genome}-{vcf}-trivialsnarls.log.txt'
     shell:
-        "vg snarls -t {threads} --include-trivial {input} > {output} 2> {log}"
+        "vg snarls "
+        "--threads {threads} "
+        "--include-trivial "
+        "{input} "
+        "1> {output} 2> {log}"
 
 rule index_distance:
     """
@@ -202,4 +237,9 @@ rule index_distance:
     benchmark: 'vg/benchmarks/{dat}/{genome}-{vcf}-distance.benchmark.txt'
     log: 'vg/logs/{dat}/{genome}-{vcf}-distance.log.txt'
     shell:
-        "vg index -t {threads} -j {output} -x {input.xg} -s {input.snarls} 2> {log}"
+        "vg index "
+        "--threads {threads} "
+        "--dist-name {output} "
+        "--xg-name {input.xg} "
+        "--snarl-name {input.snarls} "
+        "2> {log}"

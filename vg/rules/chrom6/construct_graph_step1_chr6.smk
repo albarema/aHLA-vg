@@ -70,19 +70,25 @@ rule index_xg:
     benchmark:
         "vg/benchmarks/{dat}/{genome}-{vcf}-{chrom}.index.log"
     shell:
-        "vg index --temp-dir vg/tmp -x {output.xg} -L {input} --progress 2> {log}"
+        "vg index "
+        "--temp-dir vg/tmp "
+        "--xg-name {output.xg} "
+        "--xg-alts {input} "
+        "--progress 2> {log}"
 
 rule index_snarls:
     """
     prepare the snarls index
     """
-    input: 'vg/graphs/{dat}/{genome}-{vcf}.xg'
-    output: 'vg/graphs/{dat}/{genome}-{vcf}.snarls'
+    input: 'vg/graphs/{dat}/{genome}-{vcf}-{chrom}.xg'
+    output: 'vg/graphs/{dat}/{genome}-{vcf}-{chrom}.snarls'
     threads: 8
-    benchmark: 'vg/benchmarks/{dat}/{genome}-{vcf}.snarls.benchmark.log'
-    log: 'vg/logs/{dat}/{genome}-{vcf}.snarls.log'
+    benchmark: 'vg/benchmarks/{dat}/{genome}-{vcf}-{chrom}.snarls.benchmark.log'
+    log: 'vg/logs/{dat}/{genome}-{vcf}-{chrom}.snarls.log'
     shell:
-        "vg snarls -t {threads} {input} > {output} 2> {log}"
+        "vg snarls "
+        "--threads {threads} "
+        "{input} > {output} 2> {log}"
 
 rule gbwt_haplo:
     input:
@@ -99,7 +105,12 @@ rule gbwt_haplo:
     benchmark:
         "vg/benchmarks/{dat}/{genome}-{vcf}-{chrom}-gbwt.log"
     shell:
-        "vg gbwt -d vg/tmp -x {input.xg} -o {output.gbwt} -v {input.vcf} --progress 2> {log} "
+        "vg gbwt "
+        "--temp-dir vg/tmp "
+        "--xg-name {input.xg} "
+        "--output {output.gbwt} "
+        "--vcf-input {input.vcf} "
+        "--progress 2> {log} "
 
 
 rule prune_vg:
@@ -108,8 +119,7 @@ rule prune_vg:
     """
     input:
         vg="vg/graphs/{dat}/{genome}-{vcf}-{chrom}.vg",
-        #mapping="vg/graphs/{dat}/{genome}-{vcf}.ids.mapping" -m {input.mapping}
-    output: 
+    output:
         "vg/graphs/{dat}/{genome}-{vcf}-{chrom}.pruned.vg"
     threads: 4
     benchmark: 
@@ -119,8 +129,35 @@ rule prune_vg:
     params:
         opt=OPTS
     shell:
-        "vg prune -t {threads} -M 32 --restore-paths {input.vg} --progress 1> {output} 2> {log}"
+        "vg prune "
+        "--threads {threads} "
+        "--max-degree 32 "
+        "--restore-paths {input.vg} "
+        "--progress 1> {output} 2> {log}"
 
+rule gbwt_greedy:
+    input:
+        vcf=config['vcf'][VCFV]['allminMAF'],
+        xg="vg/graphs/{dat}/{genome}-{vcf}-{chrom}.xg"
+    output:
+        gbwt="vg/graphs/{dat}/{genome}-{vcf}-{chrom}-N{n}.gbwt",
+        gg="vg/graphs/{dat}/{genome}-{vcf}-{chrom}-N{n}.gg"
+    threads: 64 # all threads
+    resources:
+        mem_mb=200000
+    log:
+        "vg/logs/{dat}/{genome}-{vcf}-{chrom}-gbwt-N{n}.log"
+    benchmark:
+        "vg/benchmarks/{dat}/{genome}-{vcf}-{chrom}-gbwt-N{n}.log"
+    shell:
+        "vg gbwt "
+        "--num-paths {wildcards.n} "
+        "--temp-dir vg/tmp "
+        "--xg-name {input.xg} "
+        "--graph-name {output.gg} "
+        "--output {output.gbwt} "
+        "--path-cover "
+        "--progress 2> {log} "
 
 rule index_gcsa:
     input:
@@ -140,9 +177,62 @@ rule index_gcsa:
     shell: 
         "vg index "
         "--temp-dir vg/tmp "
-        "-g {output.gcsa} "
-        "-t {threads} "
-        "{input.vg} --progress 2> {log}"
+        "--gcsa-out {output.gcsa} "
+        "--threads {threads} "
+        "{input.vg} "
+        "--progress 2> {log}"
 
-#    params:
-#        opt=config['gcsa_options']['highdegree']
+rule index_minimizer:
+    input:
+        xg='vg/graphs/{dat}/{genome}-{vcf}-{chrom}.xg',
+        gbwt='vg/graphs/{dat}/{genome}-{vcf}-{chrom}-N{n}.gbwt'
+    output: 'vg/graphs/{dat}/{genome}-{vcf}-{chrom}.k{k}.w{w}.N{n}.min'
+    threads: 64
+    resources:
+        mem_mb=500000
+    benchmark: 'vg/benchmarks/{dat}/{genome}-{vcf}-{chrom}-minimizer-k{k}-w{w}-N{n}.benchmark.txt'
+    log: 'vg/logs/{dat}/{genome}-{vcf}-{chrom}-minimizer-k{k}-w{w}-N{n}.log.txt'
+    shell:
+        "vg minimizer "
+        "--kmer-length {wildcards.k} "
+        "--window-length {wildcards.w} "
+        "--threads {threads} "
+        "--output-name {output} "
+        "--gbwt-name {input.gbwt} "
+        "{input.xg} 2> {log}"
+
+rule index_trivial_snarls:
+    input: 'vg/graphs/{dat}/{genome}-{vcf}-{chrom}.xg'
+    output: 'vg/graphs/{dat}/{genome}-{vcf}-{chrom}.trivial.snarls'
+    threads: 64 # use all threads
+    resources:
+        mem_mb=120000
+    benchmark: 'vg/benchmarks/{dat}/{genome}-{vcf}-{chrom}-trivialsnarls.benchmark.txt'
+    log: 'vg/logs/{dat}/{genome}-{vcf}-{chrom}-trivialsnarls.log.txt'
+    shell:
+        "vg snarls "
+        "--threads {threads} "
+        "--include-trivial "
+        "{input} "
+        "1> {output} 2> {log}"
+
+rule index_distance:
+    """
+    We might need to remove -x flag - depracted 
+    """
+    input:
+        xg='vg/graphs/{dat}/{genome}-{vcf}-{chrom}.xg',
+        snarls='vg/graphs/{dat}/{genome}-{vcf}-{chrom}.trivial.snarls'
+    output: 'vg/graphs/{dat}/{genome}-{vcf}-{chrom}.dist'
+    threads: 64
+    resources:
+        mem_mb=500000
+    benchmark: 'vg/benchmarks/{dat}/{genome}-{vcf}-{chrom}-distance.benchmark.txt'
+    log: 'vg/logs/{dat}/{genome}-{vcf}-{chrom}-distance.log.txt'
+    shell:
+        "vg index "
+        "--threads {threads} "
+        "--dist-name {output} "
+        "--xg-name {input.xg} "
+        "--snarl-name {input.snarls} "
+        "2> {log}"
