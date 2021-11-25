@@ -9,7 +9,7 @@ PRUNEOP=config['prune_version']
 OPTS=config['prune_options'][PRUNEOP]
 
 # choose vcf 
-VCFV=['1kGP']
+VCFV=config['vcf_version']
 # choose reference
 REFV=config['ref_version']
 REFPATH=config['ref'][REFV]
