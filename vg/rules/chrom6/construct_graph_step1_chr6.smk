@@ -21,7 +21,7 @@ wildcard_constraints:
 rule all:
     input:
         #expand("vg/graphs/{dat}/{genome}-{vcf}-{chrom}.gcsa", chrom=6, dat='pangenomes', genome=REFV, vcf=VCFV),
-        expand("vg/graphs/{dat}/{genome}-{vcf}-{chrom}.dist", chrom=6, dat='pangenomes', genome=REFV, vcf=VCFV)
+        expand("vg/graphs/{dat}/{genome}-{vcf}-{chrom}.dist", chrom=6, dat=VCFV, genome=REFV, vcf=VCFV)
         # expand("vg/graphs/{dat}/{genome}-{vcf}-{chrom}.gcsa", chrom=6, dat='1kGP', genome=REFV, vcf=VCFV),
 
 
