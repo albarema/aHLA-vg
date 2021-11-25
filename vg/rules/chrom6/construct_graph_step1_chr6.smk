@@ -105,14 +105,14 @@ rule gbwt_haplo:
         tbi=config['vcf'][VCFV]['minMAF']+ ".tbi",
         xg="vg/graphs/{dat}/{genome}-{vcf}-{chrom}.xg"
     output:
-        gbwt="vg/graphs/{dat}/{genome}-{vcf}-{chrom}.gbwt",
+        gbwt="vg/graphs/{dat}/{genome}-{vcf}-chr{chrom}.gbwt",
     log:
-        "vg/logs/{dat}/{genome}-{vcf}-{chrom}-gbwt.log"
+        "vg/logs/{dat}/{genome}-{vcf}-chr{chrom}-gbwt.log"
     threads: 32
     resources:
         mem_gc=200000
     benchmark:
-        "vg/benchmarks/{dat}/{genome}-{vcf}-{chrom}-gbwt.log"
+        "vg/benchmarks/{dat}/{genome}-{vcf}-chr{chrom}-gbwt.log"
     shell:
         "vg gbwt "
         "--temp-dir vg/tmp "
@@ -149,15 +149,15 @@ rule gbwt_greedy:
         vcf=config['vcf'][VCFV]['minMAF'],
         xg="vg/graphs/{dat}/{genome}-{vcf}-{chrom}.xg"
     output:
-        gbwt="vg/graphs/{dat}/{genome}-{vcf}-{chrom}-N{n}.gbwt",
-        gg="vg/graphs/{dat}/{genome}-{vcf}-{chrom}-N{n}.gg"
+        gbwt="vg/graphs/{dat}/{genome}-{vcf}-chr{chrom}-N{n}.gbwt",
+        gg="vg/graphs/{dat}/{genome}-{vcf}-chr{chrom}-N{n}.gg"
     threads: 64 # all threads
     resources:
         mem_mb=200000
     log:
-        "vg/logs/{dat}/{genome}-{vcf}-{chrom}-gbwt-N{n}.log"
+        "vg/logs/{dat}/{genome}-{vcf}-chr{chrom}-gbwt-N{n}.log"
     benchmark:
-        "vg/benchmarks/{dat}/{genome}-{vcf}-{chrom}-gbwt-N{n}.log"
+        "vg/benchmarks/{dat}/{genome}-{vcf}-chr{chrom}-gbwt-N{n}.log"
     shell:
         "vg gbwt "
         "--num-paths {wildcards.n} "
@@ -172,7 +172,7 @@ rule index_gcsa:
     input:
         vg="vg/graphs/{dat}/{genome}-{vcf}-{chrom}.pruned.vg",
         #mapping='vg/graphs/{dat}/{genome}-{vcf}.ids.mapping', # -f
-        gbwt="vg/graphs/{dat}/{genome}-{vcf}-{chrom}.gbwt"
+        gbwt="vg/graphs/{dat}/{genome}-{vcf}-chr{chrom}.gbwt"
     output:
         gcsa="vg/graphs/{dat}/{genome}-{vcf}-{chrom}.gcsa",
         gcsalcp="vg/graphs/{dat}/{genome}-{vcf}-{chrom}.gcsa.lcp"
@@ -194,7 +194,7 @@ rule index_gcsa:
 rule index_minimizer:
     input:
         xg='vg/graphs/{dat}/{genome}-{vcf}-{chrom}.xg',
-        gbwt='vg/graphs/{dat}/{genome}-{vcf}-{chrom}-N{n}.gbwt'
+        gbwt='vg/graphs/{dat}/{genome}-{vcf}-chr{chrom}-N{n}.gbwt'
     output: 'vg/graphs/{dat}/{genome}-{vcf}-{chrom}.k{k}.w{w}.N{n}.min'
     threads: 64
     resources:
