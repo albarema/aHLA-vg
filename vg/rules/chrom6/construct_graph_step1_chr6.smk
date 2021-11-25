@@ -21,7 +21,7 @@ wildcard_constraints:
 rule construct_all_gaffe:
     input:
         expand('vg/graphs/{dat}/{genome}-{vcf}-{chrom}.{ext}', dat=VCFV, chrom=6, genome=REFV, vcf=VCFV, ext=['xg', 'trivial.snarls', 'dist']),
-        expand('vg/graphs/{dat}/{genome}-{vcf}-{chrom}.k{k}.w{w}.N{n}.min', chrom=6,dat=VCFV,  chrom=6, genome=REFV, vcf=VCFV, k=config['mink'],
+        expand('vg/graphs/{dat}/{genome}-{vcf}-{chrom}.k{k}.w{w}.N{n}.min',dat=VCFV, chrom=6, genome=REFV, vcf=VCFV, k=config['mink'],
                w=config['minw'], n=config['covern'])
 
 # indexes used by the default mapper and variant caller
