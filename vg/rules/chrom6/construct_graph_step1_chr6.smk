@@ -9,7 +9,7 @@ PRUNEOP=config['prune_version']
 OPTS=config['prune_options'][PRUNEOP]
 
 # choose vcf 
-VCFV='pangenomes'
+VCFV=['pangenomes', '1kGP']
 VCFPATH=config['vcf'][VCFV]['minMAF']
 # choose reference
 REFV=config['ref_version']
