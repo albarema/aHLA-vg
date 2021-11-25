@@ -17,6 +17,9 @@ REFPATH=config['ref'][REFV]
 wildcard_constraints:
     vcf="[^-]+",
     chrom="[^-+\.?$]+",
+    ext="[^.]+",
+
+## ------------------------------------------------------------------------------------
 
 rule construct_all_gaffe:
     input:
@@ -30,6 +33,7 @@ rule construct_all:
         expand('vg/graphs/{dat}/{genome}-{vcf}-{chrom}.{ext}', dat=VCFV, genome=REFV, vcf=VCFV, chrom=6,ext=['xg', 'snarls', 'gcsa'])
 
 
+## ------------------------------------------------------------------------------------
 rule construct_chr:
     """
     constructing graph

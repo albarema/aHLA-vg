@@ -17,6 +17,7 @@ wildcard_constraints:
     chrom="[^-+\.?$]+",
     ext="[^.]+",
 
+## ------------------------------------------------------------------------------------
 rule construct_chr:
     """
     constructing graph
