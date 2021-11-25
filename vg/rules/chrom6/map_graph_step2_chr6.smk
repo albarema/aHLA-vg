@@ -48,14 +48,14 @@ rule all:
             map=MAPPER,
             minq=5
         ),
-#         expand('vg/simulation/vcf/{sample}/{dat}/{fullname}-{graph}.{map}.q{minq}.call.vcf.gz',
-#             sample=SAMPLE,
-#             dat=VCFV, #1kGP
-#             fullname=FULLS,
-#             graph=GRAPH,
-#             map=MAPPER,
-#             minq=5
-# )
+        expand('vg/simulations/bam/{sample}/{dat}/{fullname}-{graph}.{map}.sorted.bam',
+            sample=SAMPLE,
+            dat=VCFV, #1kGP
+            fullname=FULLS,
+            graph=GRAPH,
+            map=MAPPER,
+            minq=5
+)
 
 ## --------------------------------------------------------------------------------
 #
@@ -74,15 +74,22 @@ rule map_map:
         mem_mb=100000
     benchmark: 'vg/benchmarks/{sample}/{dat}/{fullname}.{genome}.{vcf}.map.benchmark.txt'
     log: 'vg/logs/{sample}/{dat}/{fullname}-{genome}-{vcf}-map.log.txt'
-yes    shell:
-        "vg map -t {threads} -x {input.xg} -g {input.gcsa} -f {input.r1} --log-time > {output} 2> {log}"
+    shell:
+        "vg map "
+        "--threads {threads} "
+        "--xg-name {input.xg} "
+        "--gcsa-name {input.gcsa} "
+        " --exclude-unaligned"
+        "--fastq {input.r1} "
+        " --band-width 1024"
+        "--log-time "
+        "1> {output} 2> {log}"
 #-f {input.r2}
 
 # map reads to the graph using giraffe
 rule map_gaffe:
     input:
         r1=config['simulpath'] + "{sample}/{fullname}.adRm.fastq.gz",
-        #r2=read2_in,
         xg='vg/graphs/{dat}/{genome}-{vcf}.xg',
         min='vg/graphs/{dat}/{genome}-{vcf}.k{k}.w{w}.N{n}.min',
         dist='vg/graphs/{dat}/{genome}-{vcf}.dist',
@@ -94,7 +101,34 @@ rule map_gaffe:
     benchmark: 'vg/benchmarks/{sample}/{dat}/{fullname}.{genome}.{vcf}.gaffe{k}k{w}w{n}N.benchmark.txt'
     log: 'vg/logs/{sample}/{dat}/{fullname}-{genome}-{vcf}-gaffe{k}k{w}w{n}N.log.txt'
     shell:
-        "vg giraffe -p -t {threads} -m {input.min} -d {input.dist} --gbwt-name {input.gbwt} -x {input.xg} -f {input.r1} > {output} 2> {log}"
+        "vg giraffe "
+        "--progress "
+        "--threads {threads} "
+        "--minimizer-name {input.min} "
+        "--dist-name {input.dist} "
+        "--gbwt-name {input.gbwt} "
+        "--xg-name {input.xg} "
+        "--fastq-in {input.r1} "
+        "1> {output} 2> {log}"
+
+
+rule surject:
+    """
+    Surject the alignments back into the reference space, yielding a regular BAM file
+    """
+    input:
+        xg='vg/graphs/{dat}/{graph}.xg',
+        gam='vg/simulations/{sample}/{dat}/{fullname}-{graph}.{map}.gam',
+    output:
+        bam="vg/simulations/bam/{sample}/{dat}/{fullname}-{graph}.{map}.sorted.bam",
+        csi="vg/simulations/bam/{sample}/{dat}/{fullname}-{graph}.{map}.sorted.bam.csi",
+    log:
+        log="data/samples/bam/{sample}/{dat}/{fullname}-{graph}.{map}.sorted.bam.log",
+    threads: 8
+    shell:
+        "( vg surject --bam-output --xg-name {input.xg} --threads {threads} {input.gam} | "
+        "  samtools sort --write-index -@ {threads} -O bam -o {output.bam} ) 2> {log}"
+
 # compute packed coverage from aligned reads
 rule pack:
     input:
@@ -108,7 +142,6 @@ rule pack:
     log: 'vg/logs/{sample}/{dat}/{fullname}-{graph}-{map}-q{minq}-pack.log.txt'
     shell:
         "vg pack -x {input.xg} -g {input.gam} -Q {wildcards.minq} -t {threads} -o {output} 2> {log}"
-
 
 # call variants from the packed read coverage
 rule call_novcf:
@@ -134,7 +167,7 @@ rule call_novcf:
 
 # genotype variants from the packed read coverage
 rule call_vcf:
-    input:git@github.com:albarema/aHLA-vg.git
+    input:
         pack='vg/simulations/{sample}/{dat}/{fullname}-{genome}-{vcf}.{map}.q{minq}.pack',
         xg='vg/graphs/{dat}/{genome}-{vcf}.xg',
         snarls='vg/graphs/{dat}/{genome}-{vcf}.snarls',
