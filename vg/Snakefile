@@ -1,0 +1,50 @@
+#### wrap up vg #####
+
+import pandas as pd
+import os
+configfile: "config.yaml"
+
+##
+wildcard_constraints:
+    vcf="[^-]+",
+    chrom="[^-+\.?$]+",
+    ext="[^.]+",
+
+## --------------------------------------------------------------------------------
+include: 'rules/construct_graph1.smk'
+
+## --------------------------------------------------------------------------------
+## global parameters 
+CHROMS = list(range(1, 23)) # + ['X']
+# chromosome names 
+CHRS=[config['chr_prefix'] + ii for ii in str(CHROMS)]
+
+# choose mapper
+MAPPER=config['mapper']
+if MAPPER == 'gaffe':
+    MAPPER = 'gaffe{}k{}w{}N'.format(config['mink'], config['minw'], config['covern'])
+# choose vcf 
+VCFV=config['vcf_version']
+VCFPATH=config['vcf'][VCFV]['minMAF']
+# choose reference
+REFV=config['ref_version']
+REFPATH=config['ref'][REFV]
+
+
+GRAPH=REFV+VCFV
+
+
+## --------------------------------------------------------------------------------
+## targets
+# indexes used by the giraffe mapper and variant caller
+rule construct_all_gaffe:
+    input:
+        expand('vg/graphs/{dat}/{genome}-{vcf}.{ext}', dat=VCFV, genome=REFV, vcf=VCFV, ext=['xg', 'trivial.snarls', 'dist']),
+        expand('vg/graphs/{dat}/{genome}-{vcf}.k{k}.w{w}.N{n}.min', dat=VCFV, genome=REFV, vcf=VCFV, k=config['mink'],
+               w=config['minw'], n=config['covern'])
+
+# indexes used by the default mapper and variant caller
+rule construct_all:
+    input: 
+        expand('vg/graphs/{dat}/{genome}-{vcf}.{ext}', dat=VCFV, genome=REFV, vcf=VCFV, ext=['xg', 'snarls', 'gcsa'])
+
