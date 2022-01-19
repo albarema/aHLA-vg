@@ -26,11 +26,11 @@ rule all:
         expand("pangenomes/vcf/samples_lists/samples_LOOC_wo_{sample}.txt",sample='HG00733'), # run first with one individual - EAS chosen
         # 3. Get filtered vcf
         # a. remove ind + conflict sites
-        expand("pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.vcf.gz", sample='HG00733', filters='allfiltered'),
+        # expand("pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.vcf.gz", sample='HG00733', filters='allfiltered'),
         # b. remvoe large sites and split multiallelics
         # expand("pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.sites{len}kb.{filters}.vcf.gz", sample='HG02080', filters='allfiltered', len=5000),
         # c. remove maf filter
-        expand("pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.maf{maf}.vcf.gz", sample='HG00733', filters='allfiltered', maf='01'),
+        #expand("pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.maf{maf}.vcf.gz", sample='HG00733', filters='allfiltered', maf='01'),
 
 
 ## --------------------------------------------------------------------------------
