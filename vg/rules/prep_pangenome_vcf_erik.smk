@@ -5,7 +5,6 @@ import pandas as pd
 import os, csv
 
 wildcard_constraints:
-    sample="^[^.]*$",
     filters="[^.]+",
     maf="\d+"
 
