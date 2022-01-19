@@ -3,7 +3,6 @@
 #  snakemake --snakefile ../../people/gsd818/aHLA-vg/vg/rules/prep_pangenome_vcf_erik.smk --cores 35 --keep-going
 import pandas as pd
 import os, csv
-configfile: config.yaml
 
 wildcard_constraints:
     sample="^[^.]*$",
@@ -77,9 +76,9 @@ rule filter_chr6_pan:
         vcf="pangenomes/vcf/chr6.pan.fa.a2fb268.4030258.bc221f9.smooth.vcf.gz",
         sampl="pangenomes/vcf/samples_lists/samples_LOOC_wo_{sample}.txt"
     output:
-        temp("pangenomes/vcf/chr6.pan.fa.a2fb268.4030258.bc221f9.tmp.smooth_wo_{sample}.{filters}.vcf.gz")
+        temp("pangenomes/vcf/chr6.pan.tmp.smooth_wo_{sample}.{filters}.vcf.gz")
     log:
-        "pangenomes/vcf/chr6.pan.fa.a2fb268.4030258.bc221f9.smooth_wo_{sample}_{filters}.log"
+        "pangenomes/vcf/chr6.pan.tmp.smooth_wo_{sample}_{filters}.log"
     threads: 4
     run:
         if wildcards.filters == "allfiltered":
@@ -92,9 +91,9 @@ rule filter_chr6_pan:
 
 rule mod_chr6_name:
     input: 
-        "pangenomes/vcf/chr6.pan.fa.a2fb268.4030258.bc221f9.tmp.smooth_wo_{sample}.{filters}.vcf.gz"
+        "pangenomes/vcf/chr6.pan.tmp.smooth_wo_{sample}.{filters}.vcf.gz"
     output:
-        temp("pangenomes/vcf/chr6.pan.fa.a2fb268.4030258.bc221f9.smooth_wo_{sample}.{filters}.vcf.gz"),
+        temp("pangenomes/vcf/chr6.pan.smooth_wo_{sample}.{filters}.vcf.gz"),
     shell:
         """
         zcat {input} | awk '{{gsub(/^grch38_grch38#1#/, ""); print}}' | bgzip -c > {output} ; bcftools index -t {output}
@@ -102,7 +101,7 @@ rule mod_chr6_name:
 
 rule split_multiallelic:
     input:
-        "pangenomes/vcf/chr6.pan.fa.a2fb268.4030258.bc221f9.smooth_wo_{sample}.{filters}.vcf.gz"
+        "pangenomes/vcf/chr6.pan.smooth_wo_{sample}.{filters}.vcf.gz"
     output:
         "pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.vcf.gz"
     shell:
