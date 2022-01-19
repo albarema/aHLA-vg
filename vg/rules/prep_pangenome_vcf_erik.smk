@@ -23,7 +23,7 @@ rule all:
         # 1. Download
         # expand("vcf/pangenomes/chr{chrom}.pan.fa.a2fb268.4030258.bc221f9.smooth.vcf.gz", chrom=CHROMS)
         # 2. Get samples list to keep for vg
-        # expand("vcf/pangenomes/samples_lists/samples_LOOC_wo_{sample}.txt",sample='HG02080'), # run first with one individual - EAS chosen
+        expand("/pangenomes/vcf/samples_lists/samples_LOOC_wo_{sample}.txt",sample='HG00733'), # run first with one individual - EAS chosen
         # 3. Get filtered vcf
         # a. remove ind + conflict sites
         expand("pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.vcf.gz", sample='HG00733', filters='allfiltered'),
