@@ -111,7 +111,7 @@ rule maf_01:
     input:
         "pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.vcf.gz"
     output:
-        "pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.maf{maf}.vcf.gz"
+        "pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.{maf}maf.vcf.gz"
     threads: 4
     shell:
         "bcftools view "
@@ -127,7 +127,7 @@ rule rm_largeSites:
     """
     input:
         vcff="pangenomes/vcf/chr6.pan.fa.tmp.smooth_wo_{sample}.{filters}.vcf.gz",
-        vcfmaf="pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.maf{maf}.vcf.gz"
+        vcfmaf="pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.{maf}maf.vcf.gz"
     output:
         "pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.sites{len}kb.{filters}.vcf.gz"
     shell:
