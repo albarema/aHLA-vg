@@ -1,6 +1,8 @@
 ##### STEP 2  - mapping #####
 # in config file set simulpath
 import pandas as pd
+import os
+configfile: "config.yaml"
 
 ## --------------------------------------------------------------------------------
 
@@ -11,7 +13,7 @@ wildcard_constraints:
     fullname="[^-]+"
 
 # simulations wrap wildcards
-SAMPLE='HG02080.maternal' # 'HG02080.paternal'
+SAMPLE='HG00733.maternal'
 FULLSPATH = config['simulpath'] + SAMPLE +'/' + SAMPLE + '.filelist'
 FULLS = pd.read_table(FULLSPATH,names=['fname'])['fname'].tolist()
 

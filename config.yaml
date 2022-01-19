@@ -1,0 +1,61 @@
+# mapper can be either 'map', 'mpmap', or 'gaffe'
+mapper: 'gaffe'
+# for minimizer/gaffe mapper
+mink: 39
+minw: 15
+covern: 16
+
+# Chromosome name prefix (use "" if chr names are in the form 1, 2, ...)
+chr_prefix: "chr"
+
+# reference
+ref_version: GRCh38_no_alts
+ref:
+  GRCh38_full_decoy: /projects/racimolab/data/MHC/reference/fasta/GRCh38_full_decoy/GRCh38_full_analysis_set_plus_decoy_hla.fa
+  GRCh38_no_alts: /projects/racimolab/data/MHC/reference/fasta/GRCh38_no_alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+
+# variants info
+vcf_version: 1kGP
+vcf:
+  pangenomes_HG00733:
+    minMAF: /maps/projects/racimolab/data/MHC/pangenomes/vcf/chr6.pan.fa.smooth_wo_HG00733.allfiltered.maf01.vcf.gz
+  1kGP:
+    allminMAF: /maps/projects/racimolab/data/MHC/reference/vcf/1kGP/1kGP.chrall.filtered.vcf.gz
+    minMAF: /maps/projects/racimolab/data/MHC/reference/vcf/1kGP/1kGP.chr6.filtered.vcf.gz
+  pangenomes_HG02080:
+    min: /maps/projects/racimolab/data/MHC/pangenomes/vcf/chr6.pan.fa.smooth_wo_HG02080.allfiltered.vcf.gz
+    minMAF: /maps/projects/racimolab/data/MHC/pangenomes/vcf/chr6.pan.fa.smooth_wo_HG02080.allfiltered.maf01.vcf.gz
+    minMAF5lg: /maps/projects/racimolab/data/MHC/pangenomes/vcf/chr6.pan.fa.smooth_wo_HG02080.sites5000kb.allfiltered.maf01.vcf.gz
+    minMAF1lg: /maps/projects/racimolab/data/MHC/pangenomes/vcf/chr6.pan.fa.smooth_wo_HG02080.sites1000kb.allfiltered.maf01.vcf.gz
+
+# choose prune options
+prune_version: highdegree
+prune_options:
+  haplo: >
+    -u
+    -g "vg/graps/{wildcards.dat}/{wildcards.genome}-{wildcards.vcf}.gbwt"
+    -a 
+    -m
+  highdegree: >
+    -M 32 --restore-paths
+gcsa_options:
+  haplo: >
+    --mapping "{wildcards.genome}-{wildcards.vcf}.ids.mapping"
+  highdegree: >
+    ""
+# Hla reference file
+hla:
+  imgthla: reference/IMGT-HLA/IMGTHLA/hla_gen.fasta
+
+# number of reads per chunk
+nb_split_reads: 20000000
+
+# simulations
+simulpath: /maps/projects/racimolab/data/MHC/simulations/v130122/garg_sims_seed/
+
+bcftools: /projects/racimolab/people/gsd818/bin/bcftools/
+fastq_dir: /willerslev/datasets/WABI_pipeline/fqs
+reference_dir: ./reference
+vcf_1kGP: /willerslev/datasets/public/1000genomes_2015_nature/vcf/umich
+vcf_hgdp: /willerslev/datasets/public/bergstrom_2019_HGDP
+
