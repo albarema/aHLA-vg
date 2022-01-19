@@ -63,7 +63,6 @@ rule loov_samples:
         d = open("pangenomes/vcf/samples_LOOC_all.txt", "rt")
         df= pd.read_csv(d, header=None)
         for i in range(len(df)):
-            filename = str("pangenomes/vcf/samples_LOOC_wo_")+ df[0][i] + str(".txt")
             finalvec = df[~df[0].isin([df[0][i]])]
             finalvec.to_csv(output.sampl, header=None, index=False)
         ## -----------------------------------------------------------------------------
