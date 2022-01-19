@@ -21,9 +21,9 @@ SAMP=pd.read_table('pangenomes/vcf/samples_LOOC_all.txt', header=None)[0].tolist
 rule all:
     input:
         # 1. Download
-        # expand("vcf/pangenomes/chr{chrom}.pan.fa.a2fb268.4030258.bc221f9.smooth.vcf.gz", chrom=CHROMS)
+        # expand("vcf/pangenomes/chr{chrom}.pan.fa.a2fb268.4030258.bc221f9.smooth.vcf.gz", chrom=6)
         # 2. Get samples list to keep for vg
-        expand("/pangenomes/vcf/samples_lists/samples_LOOC_wo_{sample}.txt",sample='HG00733'), # run first with one individual - EAS chosen
+        expand("pangenomes/vcf/samples_lists/samples_LOOC_wo_{sample}.txt",sample='HG00733'), # run first with one individual - EAS chosen
         # 3. Get filtered vcf
         # a. remove ind + conflict sites
         expand("pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.vcf.gz", sample='HG00733', filters='allfiltered'),
