@@ -3,7 +3,7 @@
 #  snakemake --snakefile ../../people/gsd818/aHLA-vg/vg/rules/prep_pangenome_vcf_erik.smk --cores 35 --keep-going
 import pandas as pd
 import os, csv
-
+configfile: config.yaml
 
 wildcard_constraints:
     sample="^[^.]*$",
