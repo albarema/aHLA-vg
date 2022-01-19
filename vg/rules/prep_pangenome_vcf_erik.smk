@@ -1,12 +1,15 @@
 ###### conda activate aligns ######
 # /projects/racimolab/data/MHC
 #  snakemake --snakefile ../../people/gsd818/aHLA-vg/vg/rules/prep_pangenome_vcf_erik.smk --cores 35 --keep-going
+
 import pandas as pd
 import os, csv
 
+# rm #    sample="^[^.]*$",
 wildcard_constraints:
+    sample="[^.]+",
     filters="[^.]+",
-    maf="\d+"
+    maf="[^.]+",
 
 CHROMS = list(range(1, 23)) + ['X']
 
@@ -21,14 +24,14 @@ rule all:
         # 1. Download
         # expand("vcf/pangenomes/chr{chrom}.pan.fa.a2fb268.4030258.bc221f9.smooth.vcf.gz", chrom=6)
         # 2. Get samples list to keep for vg
-        # expand("pangenomes/vcf/samples_lists/samples_LOOC_wo_{sample}.txt",sample='HG00733'), # run first with one individual - EAS chosen
+        # expand("pangenomes/vcf/samples_lists/samples_LOOC_wo_{sample}.txt",sample='HG02080'), # run first with one individual - EAS chosen
         # 3. Get filtered vcf
         # a. remove ind + conflict sites
-        expand("pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.vcf.gz", sample='HG00733', filters='allfiltered'),
+        expand("pangenomes/vcf/chr6.pan.smooth_wo.{sample}.{filters}.vcf.gz", sample='HG00733', filters='allfiltered'),
         # b. remvoe large sites and split multiallelics
-        # expand("pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.sites{len}kb.{filters}.vcf.gz", sample='HG02080', filters='allfiltered', len=5000),
+        # expand("pangenomes/vcf/chr6.pan.smooth_wo.{sample}.sites{len}kb.{filters}.vcf.gz", sample='HG02080', filters='allfiltered', len=5000),
         # c. remove maf filter
-        expand("pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.maf{maf}.vcf.gz", sample='HG00733', filters='allfiltered', maf='01'),
+        expand("pangenomes/vcf/chr6.pan.smooth_wo.{sample}.{filters}.{maf}maf.vcf.gz", sample='HG00733', filters='allfiltered', maf='01'),
 
 
 ## --------------------------------------------------------------------------------
@@ -57,8 +60,8 @@ rule loov_samples:
         sampl="pangenomes/vcf/samples_lists/samples_LOOC_wo_{sample}.txt"
     run:
         ## -----------------------------------------------------------------------------
-        #d = open(input.all, "rt")
-        d = open("pangenomes/vcf/samples_LOOC_all.txt", "rt")
+        d = open(input.all, "rt")
+        #d = open("pangenomes/vcf/samples_LOOC_all.txt", "rt")
         df= pd.read_csv(d, header=None)
         for i in range(len(df)):
             finalvec = df[~df[0].isin([df[0][i]])]
@@ -75,43 +78,43 @@ rule filter_chr6_pan:
         vcf="pangenomes/vcf/chr6.pan.fa.a2fb268.4030258.bc221f9.smooth.vcf.gz",
         sampl="pangenomes/vcf/samples_lists/samples_LOOC_wo_{sample}.txt"
     output:
-        temp("pangenomes/vcf/chr6.pan.tmp.smooth_wo_{sample}.{filters}.vcf.gz")
+        t1=temp("pangenomes/vcf/chr6.pan-tmp1.smooth_wo.{sample}.{filters}.vcf.gz")
     log:
-        "pangenomes/vcf/chr6.pan.tmp.smooth_wo_{sample}_{filters}.log"
+        "pangenomes/vcf/chr6.pan-tmp1.smooth_wo.{sample}.{filters}.log"
     threads: 4
     run:
         if wildcards.filters == "allfiltered":
             print("allfilters done")
-            shell(""" bcftools view -S {input.sampl} --include ' INFO/CONFLICT = "" && INFO/LV == 0 ' --output-type z --output-file {output} {input.vcf} 2> {log} """)
+            shell(""" bcftools view -S {input.sampl} --include ' INFO/CONFLICT = "" && INFO/LV == 0 ' --output-type z --output-file {output.t1} {input.vcf} 2> {log} """)
         if wildcards.filters == "confiltered":
-            shell(""" bcftools view -S {input.sampl} --include ' INFO/CONFLICT == "" ' --output-type z --output-file {output} {input.vcf} """)
+            shell(""" bcftools view -S {input.sampl} --include ' INFO/CONFLICT == "" ' --output-type z --output-file {output.t1} {input.vcf} """)
         if wildcards.filters == "lvfiltered":
-            shell(""" bcftools view -S {input.sampl} --include ' INFO/LV == 0 ' --output-type z --output-file {output} {input.vcf} """)
+            shell(""" bcftools view -S {input.sampl} --include ' INFO/LV == 0 ' --output-type z --output-file {output.t1} {input.vcf} """)
 
 rule mod_chr6_name:
     input: 
-        "pangenomes/vcf/chr6.pan.tmp.smooth_wo_{sample}.{filters}.vcf.gz"
+        "pangenomes/vcf/chr6.pan-tmp1.smooth_wo.{sample}.{filters}.vcf.gz"
     output:
-        temp("pangenomes/vcf/chr6.pan.smooth_wo_{sample}.{filters}.vcf.gz"),
+        t2=temp("pangenomes/vcf/chr6.pan-tmp2.smooth_wo.{sample}.{filters}.vcf.gz"),
     shell:
         """
-        zcat {input} | awk '{{gsub(/^grch38_grch38#1#/, ""); print}}' | bgzip -c > {output} ; bcftools index -t {output}
+        zcat {input} | awk '{{gsub(/^grch38_grch38#1#/, ""); print}}' | bgzip -c > {output.t2} ; bcftools index -t {output.t2}
         """
 
 rule split_multiallelic:
     input:
-        "pangenomes/vcf/chr6.pan.smooth_wo_{sample}.{filters}.vcf.gz"
+        "pangenomes/vcf/chr6.pan-tmp2.smooth_wo.{sample}.{filters}.vcf.gz"
     output:
-        "pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.vcf.gz"
+        "pangenomes/vcf/chr6.pan.smooth_wo.{sample}.{filters}.vcf.gz"
     shell:
         "bcftools norm --multiallelics -any --output-type z --output {output} {input} ; "
         "bcftools index -t {output}"
 
 rule maf_01:
     input:
-        "pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.vcf.gz"
+        "pangenomes/vcf/chr6.pan.smooth_wo.{sample}.{filters}.vcf.gz"
     output:
-        "pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.{maf}maf.vcf.gz"
+        "pangenomes/vcf/chr6.pan.smooth_wo.{sample}.{filters}.{maf}maf.vcf.gz"
     threads: 4
     shell:
         "bcftools view "
@@ -126,10 +129,10 @@ rule rm_largeSites:
     Remove large sites with more than 10kb alt/ref alleles. Use the file that w/w maf filter. Change {input.X}
     """
     input:
-        vcff="pangenomes/vcf/chr6.pan.fa.tmp.smooth_wo_{sample}.{filters}.vcf.gz",
-        vcfmaf="pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.{filters}.{maf}maf.vcf.gz"
+        vcff="pangenomes/vcf/chr6.pan.smooth_wo.{sample}.{filters}.vcf.gz",
+        vcfmaf="pangenomes/vcf/chr6.pan.smooth_wo.{sample}.{filters}.{maf}maf.vcf.gz"
     output:
-        "pangenomes/vcf/chr6.pan.fa.smooth_wo_{sample}.sites{len}kb.{filters}.vcf.gz"
+        "pangenomes/vcf/chr6.pan.smooth_wo.{sample}.sites{len}kb.{filters}.vcf.gz"
     shell:
         "bcftools filter -e '(STRLEN(REF)>={wildcards.len}) | (STRLEN(ALT)>={wildcards.len})' --output-type z --output {output} {input.vcfmaf} ; "
         "bcftools index -t {output}"

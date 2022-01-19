@@ -18,7 +18,7 @@ ref:
 vcf_version: 1kGP
 vcf:
   pangenomes_HG00733:
-    minMAF: /maps/projects/racimolab/data/MHC/pangenomes/vcf/chr6.pan.fa.smooth_wo_HG00733.allfiltered.maf01.vcf.gz
+    minMAF: pangenomes/vcf/chr6.pan.smooth_wo.HG00733.allfiltered.01maf.vcf.gz
   1kGP:
     allminMAF: /maps/projects/racimolab/data/MHC/reference/vcf/1kGP/1kGP.chrall.filtered.vcf.gz
     minMAF: /maps/projects/racimolab/data/MHC/reference/vcf/1kGP/1kGP.chr6.filtered.vcf.gz
