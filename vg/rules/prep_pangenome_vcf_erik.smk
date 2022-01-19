@@ -3,7 +3,6 @@
 import pandas as pd
 import os, csv
 
-configfile: "config.yaml"
 
 wildcard_constraints:
     sample="^[^.]*$",
