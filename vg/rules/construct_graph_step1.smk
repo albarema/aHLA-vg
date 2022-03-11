@@ -3,8 +3,8 @@ configfile: "config.yaml"
 
 CHROMS = list(range(1, 23)) # + ['X']
 # choose prune options - NOT WORKING - tab paste as well with the options 
-#PRUNEOP=config['prune_version']
-#OPTS=config['prune_options'][PRUNEOP]
+PRUNEOP=config['prune_version']
+OPTS=config['prune_options'][PRUNEOP]
 # choose vcf 
 VCFV=config['vcf_version']
 VCFPATH=config['vcf'][VCFV]['allminMAF']
@@ -159,6 +159,7 @@ rule gbwt_greedy:
         "vg gbwt "
         "--num-paths {wildcards.n} "
         "--temp-dir vg/tmp "
+        "--local-haplotypes "
         "--xg-name {input.xg} "
         "--graph-name {output.gg} "
         "--output {output.gbwt} "

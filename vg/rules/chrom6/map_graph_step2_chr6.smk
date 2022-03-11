@@ -4,113 +4,112 @@ configfile: "config.yaml"
 # in config file set simulpath
 import pandas as pd
 
-## --------------------------------------------------------------------------------
+## --------------------------------------------------------------------------------------------------
 
 wildcard_constraints:
     vcf="[^-+\.?$]+",
     chrom="[^-+\.?$]+",
     ext="[^.]+",
-    fullname="[^-]+"
+    fullname="[^-]+",
+    dat="[^-]+"
 
 # simulations wrap wildcards
-SAMPLE='HG02080.paternal' # 'HG02080.paternal'
-# A. map all coverage for giraffe
+SAMPLE='HG00733'
 FULLSPATH = config['simulpath'] + SAMPLE +'/' + SAMPLE + '.filelist'
-# B. map only 1c for vg map
-#FULLSPATH = config['simulpath'] + SAMPLE +'/' + SAMPLE + '.1c.filelist'
-
 FULLS = pd.read_table(FULLSPATH,names=['fname'])['fname'].tolist()
 
+df=pd.read_table(config['pangenomes_list'])
+PANGEN=pd.unique(df['assemblies_names'])
+COVS = config['coverage']
+DAM = config['damage']
+RLEN=config['readlen']
 
 # graph wrap wildcards
 MAPPER=config['mapper']
 if MAPPER == 'gaffe':
-    MAPPER = 'gaffe{}k{}w{}N'.format(config['mink'], config['minw'], config['covern'])
+    MAPPER = 'gaffe{}k{}w{}N.6.aug'.format(config['mink'], config['minw'], config['covern'])
+
+if MAPPER == "map":
+    MAPPER = "map.6.aug"
 
 # choose vcf
-VCFV='1kGP' #-1kGP
+VCFV=config['vcf_version']
 VCFPATH=config['vcf'][VCFV]['minMAF']
+
 # choose reference
 REFV=config['ref_version']
-REFPATH=config['ref'][REFV]
 
-GRAPH=REFV+ '-'+VCFV #+'-6'
+
 
 ## --------------------------------------------------------------------------------
-
 rule all:
     input:
-        expand('vg/simulations/{sample}/{dat}/{fullname}-{graph}.{map}.q{minq}.pack',
-            sample=SAMPLE,
-            dat=VCFV, #1kGP
-            fullname=FULLS,
-            graph=GRAPH,
-            map=MAPPER,
-            minq=5
-        ),
-        expand('vg/simulations/bam/{sample}/{dat}/{fullname}-{graph}.{map}.sorted.bam',
-            sample=SAMPLE,
-            dat=VCFV, #1kGP
-            fullname=FULLS,
-            graph=GRAPH,
-            map=MAPPER,
-            minq=5
-)
-
+       expand('/projects/racimolab/data/MHC/benchmarking/alignment/vg/simulations/{sample}/{fullname}-{genome}-{vcf}-{map}.bam',
+              sample='HG00733',
+              fullname=FULLS,
+              genome=REFV,
+              vcf=VCFV,
+              map='map.6.aug',
+              minq=5
+       ),
 ## --------------------------------------------------------------------------------
 #
 # Map reads from a sample and call variants
 
 # map reads to the graph using mpmap in single-path mode
-rule map_map:
-    input:
-        r1=config['simulpath'] + "{sample}/{fullname}.adRm.fastq.gz",
-        xg='vg/graphs/{dat}/{genome}-{vcf}.xg',
-        gcsa="vg/graphs/{dat}/{genome}-{vcf}.gcsa",
-        gcsalcp="vg/graphs/{dat}/{genome}-{vcf}.gcsa.lcp"
-    output: 'vg/simulations/{sample}/{dat}/{fullname}-{genome}-{vcf}.map.gam'
-    threads: 16
-    resources:
-        mem_mb=100000
-    benchmark: 'vg/benchmarks/{sample}/{dat}/{fullname}.{genome}.{vcf}.map.benchmark.txt'
-    log: 'vg/logs/{sample}/{dat}/{fullname}-{genome}-{vcf}-map.log.txt'
-    shell:
-        "vg map "
-        "--threads {threads} "
-        "--xg-name {input.xg} "
-        "--gcsa-name {input.gcsa} "
-        " --exclude-unaligned"
-        "--fastq {input.r1} "
-        " --band-width 1024"
-        "--log-time "
-        "1> {output} 2> {log}"
-#-f {input.r2}
-
 # map reads to the graph using giraffe
 rule map_gaffe:
     input:
         r1=config['simulpath'] + "{sample}/{fullname}.adRm.fastq.gz",
-        xg='vg/graphs/{dat}/{genome}-{vcf}.xg',
-        min='vg/graphs/{dat}/{genome}-{vcf}.k{k}.w{w}.N{n}.min',
-        dist='vg/graphs/{dat}/{genome}-{vcf}.dist',
-        gbwt='vg/graphs/{dat}/{genome}-{vcf}-N{n}.gbwt',
-    output: 'vg/simulations/{sample}/{dat}/{fullname}-{genome}-{vcf}.gaffe{k}k{w}w{n}N.gam'
-    threads: 16
+        min='vg/graphs/{vcf}/{genome}-{vcf}-6.k{k}.w{w}.N{n}.aug.min',
+        xg='vg/graphs/{vcf}/{genome}-{vcf}-6.aug.xg',
+        dist='vg/graphs/{vcf}/{genome}-{vcf}-6.aug.dist',
+        gbwt='vg/graphs/{vcf}/{genome}-{vcf}-chr6-N{n}.aug.gbwt',
+        gg='vg/graphs/{vcf}/{genome}-{vcf}-chr6-N{n}.aug.gg',
+#        gbz='vg/graphs/{vcf}/GRCh38_no_alts-1kGP-N16.giraffe.gbz'
+    output: '/projects/racimolab/data/MHC/benchmarking/alignment/vg/simulations/{sample}/{fullname}-{genome}-{vcf}-gaffe{k}k{w}w{n}N.6.aug.bam'
+    benchmark: 'vg/benchmarks/{sample}/testgbz-{fullname}.{genome}.{vcf}.gaffe{k}k{w}w{n}N.6.aug.benchmark.txt'
+    log: 'vg/logs/{sample}/testgbz-{fullname}-{genome}-{vcf}-gaffe{k}k{w}w{n}N.6.aug.log.txt'
+    threads: 8
     resources:
-        mem_mb=100000
-    benchmark: 'vg/benchmarks/{sample}/{dat}/{fullname}.{genome}.{vcf}.gaffe{k}k{w}w{n}N.benchmark.txt'
-    log: 'vg/logs/{sample}/{dat}/{fullname}-{genome}-{vcf}-gaffe{k}k{w}w{n}N.log.txt'
+        mem_mb=70000
     shell:
-        "vg giraffe "
-        "--progress "
+        "vg giraffe --progress "
         "--threads {threads} "
         "--minimizer-name {input.min} "
-        "--dist-name {input.dist} "
-        "--gbwt-name {input.gbwt} "
         "--xg-name {input.xg} "
+        "--dist-name {input.dist} "
         "--fastq-in {input.r1} "
-        "1> {output} 2> {log}"
+        "--output-format BAM "
+        " > {output} "
+        "2> {log}"
 
+# we can algo prodvide gbwt-name, gbwt-graph and xg graph instead of gbz
+# xg='vg/graphs/{vcf}/{genome}-{vcf}.xg',
+#        "--xg-name {input.xg} "
+#        "--gbz-name {input.gbz} "
+# map reads to the graph using mpmap in single-path mode
+rule map_map:
+    input:
+        r1=config['simulpath'] + "{sample}/{fullname}.adRm.fastq.gz",
+        xg='vg/graphs/{vcf}/{genome}-{vcf}-6.aug.xg',
+        gcsa="vg/graphs/{vcf}/{genome}-{vcf}-6.aug.gcsa",
+        gcsalcp="vg/graphs/{vcf}/{genome}-{vcf}-6.aug.gcsa.lcp"
+    output: '/projects/racimolab/data/MHC/benchmarking/alignment/vg/simulations/{sample}/{fullname}-{genome}-{vcf}-map.6.aug.bam'
+    threads: 10
+    resources:
+        mem_mb=100000
+    benchmark: 'vg/benchmarks/{sample}/{fullname}.{genome}.{vcf}.map.6.aug.benchmark.txt'
+    log: 'vg/logs/{sample}/{fullname}-{genome}-{vcf}-map.6.aug.log.txt'
+    shell:
+        "vg map --threads {threads} "
+        "--xg-name {input.xg} "
+        "--gcsa-name {input.gcsa} "
+        "--fastq {input.r1} "
+        "--min-mem 15 "
+        "--band-width 1024 "
+        "--surject-to bam "
+        "--log-time > {output} 2> {log}"
 
 rule surject:
     """
