@@ -1,7 +1,7 @@
 # mapper can be either 'map', 'mpmap', or 'gaffe'
 mapper: 'gaffe'
 # for minimizer/gaffe mapper
-mink: 39
+mink: 29
 minw: 15
 covern: 16
 
@@ -45,17 +45,36 @@ gcsa_options:
     ""
 # Hla reference file
 hla:
-  imgthla: reference/IMGT-HLA/IMGTHLA/hla_gen.fasta
+  imgthla: /projects/racimolab/data/MHC/reference/IMGT-HLA/IMGTHLA/hla_gen.fasta
 
-# number of reads per chunk
-nb_split_reads: 20000000
+
 
 # simulations
-simulpath: /maps/projects/racimolab/data/MHC/simulations/v130122/garg_sims_seed/
+simulpath: /maps/projects/racimolab/data/MHC/simulations/v070222/garg_sims_reps/
+pangenomes_list: /maps/projects/racimolab/data/MHC/pangenomes/samples_list_hprc_year1.txt
+coverage:
+ - 0.1
+ - 0.5
+ - 1
+ - 2
+damage:
+ - 0
+ - 0.2
+ - 0.4
+ - 0.7
+readlen:
+ - 120
+ - 75
+ - 60
+ - 50
+ - 40
+ - 30
+haplotypes:
+ - maternal
+ - paternal
 
+# tools
 bcftools: /projects/racimolab/people/gsd818/bin/bcftools/
-fastq_dir: /willerslev/datasets/WABI_pipeline/fqs
-reference_dir: ./reference
-vcf_1kGP: /willerslev/datasets/public/1000genomes_2015_nature/vcf/umich
-vcf_hgdp: /willerslev/datasets/public/bergstrom_2019_HGDP
 
+# number of reads per chunk
+#nb_split_reads: 20000000
