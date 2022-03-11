@@ -163,7 +163,7 @@ rule gbwt_greedy:
         "--xg-name {input.xg} "
         "--graph-name {output.gg} "
         "--output {output.gbwt} "
-        "--path-cover "
+#        "--path-cover "
         "--progress 2> {log} "
 
 
