@@ -50,6 +50,34 @@ rule all:
        ),
 ## --------------------------------------------------------------------------------
 # map reads to the graph using giraffe
+
+rule vg_downsample_graph:
+    """
+    Sample the the most common local haplotypes present in the input VCF.
+    Mapping to a graph with lots of low frequency haplotypes reduces mapping accuracy.
+    https://github.com/vgteam/vg/wiki/VG-GBWT-Subcommand#sampling-local-haplotypes
+    """
+    input:
+        gbz="vg/graphs/{vcf}/GRCh38_no_alts-1kGP-N16.giraffe.gbz",
+        min="vg/graphs/{vcf}/{genome}-{vcf}.k{k}.w{w}.N{n}.min",
+        dst="vg/graphs/{vcf}/{genome}-{vcf}.dist",
+    output:
+        gbz="vg/graphs/{vcf}/GRCh38_no_alts-1kGP-N{n}.sampled.{N}.giraffe.gbz",
+        min="vg/graphs/{vcf}/{genome}-{vcf}.k{k}.w{w}.N{n}.sampled.{N}.min",
+        dst="vg/graphs/{vcf}/{genome}-{vcf}.sampled.{N}.dist",
+    log:
+        log="vg/logs/{genome}-{vcf}.k{k}.w{w}.N{n}.sampled.{N}.log",
+    benchmark:
+        "vg/benchmarks/{genome}-{vcf}.k{k}.w{w}.N{n}.sampled.{N}.tsv"
+    shell:
+        # TODO ??
+        # vg gbwt --xg-name graph.xg --output sampled.gbwt --local-haplotypes haplotypes.gbwt
+        "vg gbwt"
+        " --gbz-input {input.gbz}"
+        " --output vg/graphs/sampled.gbwt"
+        " --local-haplotypes vg/graphs/haplotypes.gbwt"
+        " --num-paths {wildcards.N}"
+
 rule map_gaffe:
     input:
         r1=config['simulpath'] + "{sample}/{fullname}.adRm.fastq.gz",
