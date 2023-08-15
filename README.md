@@ -2,7 +2,7 @@
 Generate a genome variation graph to map ancient DNA. The graph can be augmented using HLA variation to achieve better accuracy for mapping hypervariable regions (e.g.: HLA). The pipeline is written in snakemake and all steps can be found under the rules subdir. 
 
 
-[![INSERT YOUR GRAPHIC HERE](ARM_HLA_poster.pdf)]()
+[Poster pipeline](ARM_HLA_poster.pdf)()
 
 vg pipeline:
 - preparation of files
