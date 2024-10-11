@@ -11,7 +11,9 @@ wildcard_constraints:
     ext="[^.]+",
 
 ## --------------------------------------------------------------------------------
+include: 'rules/prep_vcf.smk'
 include: 'rules/construct_graph_step1.smk'
+include: 'rules/map_graph_step2.smk'
 
 ## --------------------------------------------------------------------------------
 ## global parameters 
